@@ -1,0 +1,31 @@
+services:
+  - type: web
+    name: lavalust-product-api
+    runtime: docker
+    plan: free
+    healthCheckPath: /
+    envVars:
+      - key: APP_ENV
+        value: production
+      - key: API_HELPER_ENABLED
+        value: true
+      - key: MIGRATION_ENABLED
+        value: false
+      - key: DB_HOST
+        sync: false
+      - key: DB_PORT
+        sync: false
+      - key: DB_USER
+        sync: false
+      - key: DB_PASSWORD
+        sync: false
+      - key: DB_NAME
+        sync: false
+      - key: DB_SSL_CA
+        sync: false
+      - key: JWT_SECRET
+        sync: false
+      - key: REFRESH_TOKEN_KEY
+        sync: false
+      - key: CORS_ALLOWED_ORIGINS
+        sync: false
