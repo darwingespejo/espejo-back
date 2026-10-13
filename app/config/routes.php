@@ -62,6 +62,7 @@ $router->get('/student/profile', 'StudentController::profile')
 | -------------------------------------------------------------------
 */
 $router->post('/api/auth/login', 'ApiController::login');
+$router->post('/api/auth/register', 'ApiController::register');
 $router->post('/api/auth/refresh', 'ApiController::refresh');
 $router->post('/api/auth/logout', 'ApiController::logout');
 
@@ -73,6 +74,7 @@ $router->patch('/api/products/{id}', 'ApiController::update_product');
 $router->delete('/api/products/{id}', 'ApiController::delete_product');
 
 $router->options('/api/auth/login', 'ApiController::options');
+$router->options('/api/auth/register', 'ApiController::options');
 $router->options('/api/auth/refresh', 'ApiController::options');
 $router->options('/api/auth/logout', 'ApiController::options');
 $router->options('/api/products', 'ApiController::options');

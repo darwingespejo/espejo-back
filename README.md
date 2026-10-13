@@ -207,6 +207,7 @@ All product endpoints require `Authorization: Bearer <access_token>`.
 | Method | Endpoint | Access |
 |---|---|---|
 | `POST` | `/api/auth/login` | Public |
+| `POST` | `/api/auth/register` | Public; creates a standard `user` account |
 | `POST` | `/api/auth/refresh` | Public; requires a refresh token |
 | `POST` | `/api/auth/logout` | Authenticated |
 | `GET` | `/api/products` | Authenticated |
@@ -215,8 +216,9 @@ All product endpoints require `Authorization: Bearer <access_token>`.
 | `PUT` / `PATCH` | `/api/products/{id}` | Authenticated |
 | `DELETE` | `/api/products/{id}` | Authenticated |
 
-Login accepts `identity` (username or email) and `password`. Product create and
-update requests use JSON fields `product_name`, `description`, `price`, and
+Registration accepts `username`, `email`, and `password`. Login accepts
+`identity` (username or email) and `password`. Product create and update
+requests use JSON fields `product_name`, `description`, `price`, and
 `quantity`. The products table is created by migration
 `003_create_products_table`.
 
@@ -233,8 +235,12 @@ update requests use JSON fields `product_name`, `description`, `price`, and
 
 3. Set `MIGRATION_ENABLED=true`, run `php lava migration run` to create the
    users, refresh-token, and products tables, then set it back to `false`.
-4. Create the first administrator using a trusted MySQL console. Generate a
-   password hash with `php -r "echo password_hash('replace-with-a-password', PASSWORD_DEFAULT), PHP_EOL;"`,
+4. Open the frontend and create an account. Public registrations are assigned
+   the `user` role and cannot grant themselves elevated privileges. Registration
+   requires only a username, email address, and password. If an
+   administrator account is needed, create it using a trusted MySQL console.
+   Generate a password hash with
+   `php -r "echo password_hash('replace-with-a-password', PASSWORD_DEFAULT), PHP_EOL;"`,
    then insert it (replace the example values with your own):
 
    ```sql
@@ -242,17 +248,16 @@ update requests use JSON fields `product_name`, `description`, `price`, and
    VALUES ('System', 'Administrator', 'admin', 'admin@example.com', '<paste-generated-hash>', 'admin', 1);
    ```
 
-   There is intentionally no public registration endpoint. Never store the
-   plaintext password or commit the generated hash.
-5. Configure and run the separate frontend repository, setting its
+   Never store the plaintext password or commit the generated hash.
+5. Configure and run the frontend, setting its
    `VITE_API_BASE_URL` to this API's base URL. For a frontend served from a
    different origin, set `CORS_ALLOWED_ORIGINS` in this backend's environment
    to the exact frontend origin.
 
 ### Render deployment
 
-`render.yaml` describes the Docker-based API service. Create it from the
-Blueprint, then set the Aiven `DB_HOST`, `DB_PORT`,
+`render.yaml` describes the Docker-based API service and its required runtime
+environment variables. Create it from the Blueprint, then set the Aiven `DB_HOST`, `DB_PORT`,
 `DB_USER`, `DB_PASSWORD`, `DB_NAME`, and `DB_SSL_CA` environment values. If
 using Aiven TLS, upload its CA certificate to Render as a secret file and set
 `DB_SSL_CA` to that file's path. Set independent random values for `JWT_SECRET`

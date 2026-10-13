@@ -58,6 +58,72 @@ class ApiController extends Controller
         ]);
     }
 
+    public function register()
+    {
+        $input = $this->api->body();
+        if (!is_array($input)) {
+            $this->api->respond_error('A JSON object is required.', 400);
+        }
+
+        $username = isset($input['username']) && is_string($input['username'])
+            ? trim(htmlspecialchars_decode($input['username'], ENT_QUOTES))
+            : '';
+        $email = isset($input['email']) && is_string($input['email'])
+            ? strtolower(trim(htmlspecialchars_decode($input['email'], ENT_QUOTES)))
+            : '';
+        $password = isset($input['password']) && is_string($input['password'])
+            ? htmlspecialchars_decode($input['password'], ENT_QUOTES)
+            : '';
+
+        if (!preg_match('/^[A-Za-z0-9._-]{3,100}$/', $username)) {
+            $this->api->respond_error(
+                'Username must be 3-100 characters and use only letters, numbers, dots, underscores, or hyphens.',
+                422
+            );
+        }
+        if (strlen($email) > 255 || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            $this->api->respond_error('A valid email address is required.', 422);
+        }
+        if (strlen($password) < 8 || strlen($password) > 72) {
+            $this->api->respond_error('Password must be between 8 and 72 bytes.', 422);
+        }
+
+        $duplicate = $this->db->raw(
+            'SELECT id FROM users WHERE username = ? OR email = ? LIMIT 1',
+            [$username, $email]
+        );
+        if ($duplicate->fetch(PDO::FETCH_ASSOC)) {
+            $this->api->respond_error('That username or email is already registered.', 409);
+        }
+
+        $this->db->table('users')->insert([
+            'firstname' => $username,
+            'lastname' => '',
+            'username' => $username,
+            'email' => $email,
+            'password' => password_hash($password, PASSWORD_DEFAULT),
+            'role' => 'user',
+            'is_active' => 1,
+        ]);
+        $userId = (int) $this->db->last_id();
+
+        $statement = $this->db->raw(
+            'SELECT id, username, email, role FROM users WHERE id = ? LIMIT 1',
+            [$userId]
+        );
+        $user = $statement->fetch(PDO::FETCH_ASSOC);
+        $tokens = $this->api->issue_tokens([
+            'id' => $userId,
+            'role' => 'user',
+            'scopes' => ['read', 'write'],
+        ]);
+
+        $this->api->respond([
+            'user' => $user,
+            'tokens' => $tokens,
+        ], 201);
+    }
+
     public function refresh()
     {
         $input = $this->api->body();
