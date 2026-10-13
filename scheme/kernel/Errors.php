@@ -139,12 +139,17 @@ class Errors
 		$request_path = parse_url($_SERVER['REQUEST_URI'] ?? '', PHP_URL_PATH);
 		if (is_string($request_path) && preg_match('~(?:^|/)api(?:/|$)~i', $request_path)) {
 			error_log('[database] ' . ($exception ? get_class($exception) . ': ' : '') . $message);
+			while (ob_get_level() > 0) {
+				ob_end_clean();
+			}
 			http_response_code(503);
 			header('Content-Type: application/json; charset=UTF-8');
-			echo json_encode([
+			$body = json_encode([
 				'error' => 'Database unavailable. Check the backend database settings and CA certificate, then review the backend logs.',
 				'status' => 503,
 			], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+			header('Content-Length: ' . strlen($body));
+			echo $body;
 			exit();
 		}
 

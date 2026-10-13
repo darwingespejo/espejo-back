@@ -357,8 +357,21 @@ class Api
      */
     public function respond($data, $code = 200)
     {
+        $json = json_encode($data, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+        if ($json === false) {
+            error_log('[api] Failed to encode JSON response: ' . json_last_error_msg());
+            $code = 500;
+            $json = '{"error":"The server could not encode the API response.","status":500}';
+        }
+
+        while (ob_get_level() > 0) {
+            ob_end_clean();
+        }
+
         http_response_code($code);
-        echo json_encode($data, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+        header('Content-Type: application/json; charset=UTF-8');
+        header('Content-Length: ' . strlen($json));
+        echo $json;
         exit;
     }
 
