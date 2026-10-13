@@ -160,6 +160,38 @@ if ( ! function_exists('show_error'))
 	}
 }
 
+if (!function_exists('_api_failure_response'))
+{
+	/**
+	 * Return a safe JSON error for failures during API requests.
+	 *
+	 * @param string $type
+	 * @param string $message
+	 * @param string $file
+	 * @param int $line
+	 * @return bool
+	 */
+	function _api_failure_response($type, $message, $file, $line)
+	{
+		$request_path = parse_url($_SERVER['REQUEST_URI'] ?? '', PHP_URL_PATH);
+		if (!is_string($request_path) || !preg_match('~(?:^|/)api(?:/|$)~i', $request_path)) {
+			return false;
+		}
+
+		error_log(sprintf('[api] %s: %s in %s:%d', $type, $message, $file, $line));
+		while (ob_get_level() > 0) {
+			ob_end_clean();
+		}
+
+		$body = '{"error":"The server encountered an internal error. Check the backend logs for details.","status":500}';
+		http_response_code(500);
+		header('Content-Type: application/json; charset=UTF-8');
+		header('Content-Length: ' . strlen($body));
+		echo $body;
+		return true;
+	}
+}
+
 if ( ! function_exists('_shutdown_handler'))
 {
 	/**
@@ -172,6 +204,9 @@ if ( ! function_exists('_shutdown_handler'))
 		if (isset($last_error) &&
 			($last_error['type'] & (E_ERROR | E_PARSE | E_CORE_ERROR | E_CORE_WARNING | E_COMPILE_ERROR | E_COMPILE_WARNING)))
 		{
+			if (_api_failure_response('Fatal PHP error', $last_error['message'], $last_error['file'], $last_error['line'])) {
+				return;
+			}
 			_error_handler($last_error['type'], $last_error['message'], $last_error['file'], $last_error['line']);
 		}
 	}
@@ -186,6 +221,10 @@ if ( ! function_exists('_exception_handler'))
 	 */
 	function _exception_handler($e)
 	{
+		if (_api_failure_response(get_class($e), $e->getMessage(), $e->getFile(), $e->getLine())) {
+			return;
+		}
+
 		if(config_item('log_threshold') == 1 || config_item('log_threshold') == 3)
 		{
 			$logger = load_class('logger', 'kernel');
