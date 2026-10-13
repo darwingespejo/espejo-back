@@ -136,6 +136,18 @@ class Errors
 	 */
 	public function show_database_error($message, $sql = '', $bindings = [], $exception = null, $template = 'error_db')
 	{
+		$request_path = parse_url($_SERVER['REQUEST_URI'] ?? '', PHP_URL_PATH);
+		if (is_string($request_path) && preg_match('~(?:^|/)api(?:/|$)~i', $request_path)) {
+			error_log('[database] ' . ($exception ? get_class($exception) . ': ' : '') . $message);
+			http_response_code(503);
+			header('Content-Type: application/json; charset=UTF-8');
+			echo json_encode([
+				'error' => 'Database unavailable. Check the backend database settings and CA certificate, then review the backend logs.',
+				'status' => 503,
+			], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+			exit();
+		}
+
 		$template_path = config_item('error_view_path');
 		if (empty($template_path)) {
 			$template_path = APP_DIR . 'views/errors/';

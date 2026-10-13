@@ -157,6 +157,12 @@ class ApiController extends Controller
         $this->api->respond(['message' => 'Signed out successfully.']);
     }
 
+    public function health()
+    {
+        $this->db->raw('SELECT 1');
+        $this->api->respond(['status' => 'ok']);
+    }
+
     public function products()
     {
         $this->authenticated_user();

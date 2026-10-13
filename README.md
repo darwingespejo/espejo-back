@@ -256,8 +256,9 @@ requests use JSON fields `product_name`, `description`, `price`, and
 
 ### Render deployment
 
-`render.yaml` describes the Docker-based API service and its required runtime
-environment variables. Create it from the Blueprint, then set the Aiven `DB_HOST`, `DB_PORT`,
+`render.yaml` describes the Docker-based API service, its required runtime
+environment variables, and a database-backed `/api/health` check. Create it
+from the Blueprint, then set the Aiven `DB_HOST`, `DB_PORT`,
 `DB_USER`, `DB_PASSWORD`, `DB_NAME`, and `DB_SSL_CA` environment values. If
 using Aiven TLS, upload its CA certificate to Render as a secret file and set
 `DB_SSL_CA` to that file's path. Set independent random values for `JWT_SECRET`
@@ -271,7 +272,10 @@ deployed API URL. The exercise submission still needs the owner's GitHub
 repository URLs, deployed Render URLs, and working screenshots.
 
 Database migrations are available through the LavaLust CLI only. They are not
-exposed as public web routes; keep `MIGRATION_ENABLED=false` on the deployed API.
+exposed as public web routes. In the Render Shell, temporarily set
+`MIGRATION_ENABLED=true` for the service and run
+`php /var/www/html/lava migration run`; then restore `MIGRATION_ENABLED=false`
+and redeploy. Do not leave migrations enabled on the deployed API.
 
 ### Base URL
 

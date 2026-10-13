@@ -273,6 +273,10 @@ class Database {
         );
 
         if ($driver === 'mysql' && $ssl_ca !== '') {
+            if (!is_file($ssl_ca) || !is_readable($ssl_ca)) {
+                throw new PDOException('DB_SSL_CA must point to a readable CA certificate file.');
+            }
+
             if (!defined('PDO::MYSQL_ATTR_SSL_CA')) {
                 throw new PDOException('DB_SSL_CA is configured, but PDO MySQL SSL support is unavailable.');
             }

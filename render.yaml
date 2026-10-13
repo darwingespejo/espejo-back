@@ -3,7 +3,7 @@ services:
     name: lavalust-product-api
     runtime: docker
     plan: free
-    healthCheckPath: /
+    healthCheckPath: /api/health
     envVars:
       - key: APP_ENV
         value: production

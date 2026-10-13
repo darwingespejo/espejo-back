@@ -66,6 +66,7 @@ $router->post('/api/auth/register', 'ApiController::register');
 $router->post('/api/auth/refresh', 'ApiController::refresh');
 $router->post('/api/auth/logout', 'ApiController::logout');
 
+$router->get('/api/health', 'ApiController::health');
 $router->get('/api/products', 'ApiController::products');
 $router->post('/api/products', 'ApiController::create_product');
 $router->get('/api/products/{id}', 'ApiController::product');
@@ -77,5 +78,6 @@ $router->options('/api/auth/login', 'ApiController::options');
 $router->options('/api/auth/register', 'ApiController::options');
 $router->options('/api/auth/refresh', 'ApiController::options');
 $router->options('/api/auth/logout', 'ApiController::options');
+$router->options('/api/health', 'ApiController::options');
 $router->options('/api/products', 'ApiController::options');
 $router->options('/api/products/{id}', 'ApiController::options');
